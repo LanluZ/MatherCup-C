@@ -114,6 +114,7 @@ def main():
     # 预测模型
     if predict_model_mode:
         predict_y = predict(model_pkl_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y)
+        predict_y[:, 0] = predict_y[:, 0] * timedelta(days=1) + datetime(1970, 1, 1)  # 时间戳反算
         predict_y = pd.DataFrame(predict_y, index=None)
         predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
 

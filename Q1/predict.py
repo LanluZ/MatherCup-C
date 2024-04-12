@@ -34,4 +34,5 @@ def predict(model_path, origin_data, seq_length, predict_seq_time, scaler_x, sca
         predict_y.append(new_line_x[0:2])
 
     # 结果保存
+    predict_y = np.array(predict_y)
     return predict_y
