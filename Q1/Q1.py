@@ -1,3 +1,5 @@
+import copy
+
 import netron
 import torch
 import os
@@ -27,20 +29,20 @@ scaler_y = MinMaxScaler()
 
 def main():
     input_size = 59  # 输入层维度
-    hidden_size = 1024  # 隐藏层维度
+    hidden_size = 512  # 隐藏层维度
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
     seq_length = 57  # 序列大小
 
-    epochs = 22  # 训练轮次
-    batch_size = 50  # 批次大小
+    epochs = 20  # 训练轮次
+    batch_size = 40  # 批次大小
     learn_rate = 0.001  # 学习率
 
-    create_model_mode = True  # 创建新模型
-    train_model_mode = True  # 训练模型
-    test_model_mode = True  # 测试模型
-    convert_model_mode = True  # 转换模型
-    predict_model_mode = False  # 预测模型
+    create_model_mode = False  # 创建新模型
+    train_model_mode = False  # 训练模型
+    test_model_mode = False  # 测试模型
+    convert_model_mode = False  # 转换模型
+    predict_model_mode = True  # 预测模型
 
     # 读取数据
     origin_data = pd.read_csv(os.path.join(data_path, '附件1.csv'), encoding="GBK")
@@ -65,8 +67,8 @@ def main():
     origin_data_x = scaler_x.fit_transform(origin_data[:, :])  # 归一化原始数据x
     origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 1], axis=1))  # 归一化原始数据y
     for i in range(origin_data.shape[0] - seq_length):
-        data_x.append(origin_data_x[i:i + seq_length])
-        data_y.append(origin_data_y[i:i + seq_length])
+        data_x.append(origin_data_x[i:i + seq_length])  # 现在
+        data_y.append(origin_data_y[i + 1:i + seq_length + 1])  # 未来
     data_x = np.array(data_x)  # 三维
     data_y = np.array(data_y)  # 三维
 
@@ -83,7 +85,7 @@ def main():
 
     train_dataset = LSTMDataset(train_data_x, train_data_y)
     test_dataset = LSTMDataset(test_data_x, test_data_y)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
     # 创建模型
@@ -112,7 +114,36 @@ def main():
 
     # 预测模型
     if predict_model_mode:
-        pass
+        model = torch.load(model_pkl_path).cuda()
+        model.eval()  # 测试模式
+        # 循环预测
+        origin_x = origin_data[-seq_length:]
+        predict_y = []
+        for i in range(seq_length):
+            x = scaler_x.transform(origin_x)  # 归一化
+            x = np.expand_dims(x, axis=0)  # 升维
+            y = model(torch.tensor(x).float().cuda())  # 预测
+            y = y.cpu().detach().numpy().squeeze(0)  # 降维
+            result = scaler_y.inverse_transform(y)  # 反归一化
+            result = result.squeeze(1)  # 降维
+
+            # 新行准备
+            new_line_x = copy.copy(origin_x[0])
+            new_line_x[0] += 1  # 日期更改
+            new_line_x[1] = result[-1]  # 货值更改
+
+            # 旧行删除
+            origin_x = np.delete(origin_x, 0, axis=0)
+
+            # 新行拼接
+            origin_x = np.vstack((origin_x, new_line_x))
+
+            # 结果记录
+            predict_y.append(new_line_x[0:2])
+
+        # 结果保存
+        predict_y = pd.DataFrame(predict_y, index=None)
+        predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
 
 
 class LSTMDataset(Dataset):
