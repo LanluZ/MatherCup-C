@@ -14,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 from model import *
 from train import *
 from test import *
+from predict import *
 
 # 环境获取
 project_path = os.path.dirname(__file__)
@@ -33,7 +34,7 @@ def main():
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
     seq_length = 57  # 序列大小
-    predict_seq_time = 57  # 预测长度
+    predict_seq_time = 57 * 30  # 预测长度
 
     epochs = 20  # 训练轮次
     batch_size = 40  # 批次大小
@@ -115,34 +116,7 @@ def main():
 
     # 预测模型
     if predict_model_mode:
-        model = torch.load(model_pkl_path).cuda()
-        model.eval()  # 测试模式
-        # 循环预测
-        origin_x = origin_data[-seq_length:]
-        predict_y = []
-        for i in range(predict_seq_time):
-            x = scaler_x.transform(origin_x)  # 归一化
-            x = np.expand_dims(x, axis=0)  # 升维
-            y = model(torch.tensor(x).float().cuda())  # 预测
-            y = y.cpu().detach().numpy().squeeze(0)  # 降维
-            result = scaler_y.inverse_transform(y)  # 反归一化
-            result = result.squeeze(1)  # 降维
-
-            # 新行准备
-            new_line_x = copy.copy(origin_x[0])
-            new_line_x[0] += 1  # 日期更改
-            new_line_x[1] = result[-1]  # 货值更改
-
-            # 旧行删除
-            origin_x = np.delete(origin_x, 0, axis=0)
-
-            # 新行拼接
-            origin_x = np.vstack((origin_x, new_line_x))
-
-            # 结果记录
-            predict_y.append(new_line_x[0:2])
-
-        # 结果保存
+        predict_y = predict(model_pkl_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y)
         predict_y = pd.DataFrame(predict_y, index=None)
         predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
 
