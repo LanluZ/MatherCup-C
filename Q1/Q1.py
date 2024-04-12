@@ -33,6 +33,7 @@ def main():
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
     seq_length = 57  # 序列大小
+    predict_seq_time = 57  # 预测长度
 
     epochs = 20  # 训练轮次
     batch_size = 40  # 批次大小
@@ -119,7 +120,7 @@ def main():
         # 循环预测
         origin_x = origin_data[-seq_length:]
         predict_y = []
-        for i in range(seq_length):
+        for i in range(predict_seq_time):
             x = scaler_x.transform(origin_x)  # 归一化
             x = np.expand_dims(x, axis=0)  # 升维
             y = model(torch.tensor(x).float().cuda())  # 预测
