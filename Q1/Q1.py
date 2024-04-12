@@ -1,6 +1,3 @@
-import copy
-
-import netron
 import torch
 import os
 
