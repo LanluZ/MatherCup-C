@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
@@ -11,10 +12,10 @@ from predict import *
 
 # 环境获取
 project_path = os.path.dirname(__file__)
-data_path = os.path.join(project_path, 'data')
-output_path = os.path.join(project_path, 'output')
-model_pkl_path = os.path.join(output_path, 'model.pkl')
-model_onnx_path = os.path.join(output_path, 'model.onnx')
+data_path = os.path.join(project_path, "data")
+output_path = os.path.join(project_path, "output")
+model_pkl_path = os.path.join(output_path, "model.pkl")
+model_onnx_path = os.path.join(output_path, "model.onnx")
 
 # 归一化
 scaler_x = MinMaxScaler()
@@ -40,7 +41,7 @@ def main():
     predict_model_mode = True  # 预测模型
 
     # 读取数据
-    origin_data = pd.read_csv(os.path.join(data_path, '附件1.csv'), encoding="GBK")
+    origin_data = pd.read_csv(os.path.join(data_path, "附件1.csv"), encoding="GBK")
 
     # 数据预处理
     for row in origin_data.iterrows():
@@ -53,7 +54,7 @@ def main():
         origin_data.iloc[row[0], 0] = "SC0" + row[1]["分拣中心"][-1] if len(row[1]["分拣中心"]) == 3 else row[1][
             "分拣中心"]
 
-    origin_data = origin_data.sort_values(by=['日期', '分拣中心'], ascending=True)  # 排序和子排序
+    origin_data = origin_data.sort_values(by=["日期", "分拣中心"], ascending=True)  # 排序和子排序
     origin_data = pd.get_dummies(origin_data, columns=["分拣中心"], prefix="Center")  # 编码哑变量
     origin_data = np.array(origin_data)  # 转化为numpy数组
 
@@ -92,13 +93,13 @@ def main():
     if train_model_mode:
         train_loss = train(model_pkl_path, train_dataloader, epochs, learn_rate)
         train_loss = pd.DataFrame(train_loss, index=None)
-        train_loss.to_csv(os.path.join(output_path, 'train_loss.csv'), header=False, index=False)
+        train_loss.to_csv(os.path.join(output_path, "train_loss.csv"), header=False, index=False)
 
     # 测试模型
     if test_model_mode:
         test_loss = test(model_pkl_path, test_dataloader)
         test_loss = pd.DataFrame(test_loss, index=None)
-        test_loss.to_csv(os.path.join(output_path, 'test_loss.csv'), header=False, index=False)
+        test_loss.to_csv(os.path.join(output_path, "test_loss.csv"), header=False, index=False)
 
     # 转换模型
     if convert_model_mode:
@@ -110,9 +111,10 @@ def main():
     # 预测模型
     if predict_model_mode:
         predict_y = predict(model_pkl_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y)
+        predict_y[:, 1] = predict_y[:, 1].astype(np.integer)  # 格式整理
         predict_y[:, 0] = predict_y[:, 0] * timedelta(days=1) + datetime(1970, 1, 1)  # 时间戳反算
         predict_y = pd.DataFrame(predict_y, index=None)
-        predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
+        predict_y.to_csv(os.path.join(output_path, "prediction.csv"), header=False, index=False)
 
 
 class LSTMDataset(Dataset):
@@ -127,5 +129,5 @@ class LSTMDataset(Dataset):
         return self.data_x.shape[0]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
