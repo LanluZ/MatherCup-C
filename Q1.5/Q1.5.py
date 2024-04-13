@@ -39,7 +39,7 @@ def main():
     train_model_mode = False  # 训练模型
     test_model_mode = False  # 测试模型
     convert_model_mode = False  # 转换模型
-    predict_model_mode = True  # 预测模型
+    predict_model_mode = False  # 预测模型
 
     # 数据预处理
     if pretreatment_data_mode:
