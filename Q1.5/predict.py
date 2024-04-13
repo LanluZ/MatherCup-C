@@ -5,11 +5,10 @@ import numpy as np
 import pandas as pd
 
 
-def predict(model_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y):
+def predict(model_path, origin_x, predict_seq_time, scaler_x, scaler_y):
     model = torch.load(model_path).cuda()
     model.eval()  # 测试模式
     # 循环预测
-    origin_x = origin_data[-seq_length:]
     predict_y = []
     for i in range(predict_seq_time):
         x = scaler_x.transform(origin_x)  # 归一化
@@ -22,7 +21,8 @@ def predict(model_path, origin_data, seq_length, predict_seq_time, scaler_x, sca
         # 新行准备
         new_line_x = copy.copy(origin_x[0])
         new_line_x[0] += 1  # 日期更改
-        new_line_x[1] = result[-1]  # 货值更改
+        new_line_x[1] = new_line_x[1] + 1 if new_line_x[1] == 23 else 0  # 时间更改
+        new_line_x[2] = result[-1]  # 货值更改
 
         # 旧行删除
         origin_x = np.delete(origin_x, 0, axis=0)
@@ -31,7 +31,7 @@ def predict(model_path, origin_data, seq_length, predict_seq_time, scaler_x, sca
         origin_x = np.vstack((origin_x, new_line_x))
 
         # 结果记录
-        predict_y.append(new_line_x[0:2])
+        predict_y.append(new_line_x[0:3])
 
     # 结果保存
     predict_y = np.array(predict_y)

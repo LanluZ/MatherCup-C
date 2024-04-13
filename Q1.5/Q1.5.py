@@ -34,11 +34,11 @@ def main():
     batch_size = 40  # 批次大小
     learn_rate = 0.001  # 学习率
 
-    create_model_mode = True  # 创建新模型
-    train_model_mode = True  # 训练模型
-    test_model_mode = True  # 测试模型
-    convert_model_mode = True  # 转换模型
-    predict_model_mode = False  # 预测模型
+    create_model_mode = False  # 创建新模型
+    train_model_mode = False  # 训练模型
+    test_model_mode = False  # 测试模型
+    convert_model_mode = False  # 转换模型
+    predict_model_mode = True  # 预测模型
 
     # 读取数据
     origin_data = pd.read_csv(os.path.join(data_path, '附件2.csv'), encoding='GBK')
@@ -110,8 +110,9 @@ def main():
 
     # 预测模型
     if predict_model_mode:
-        predict_y = predict(model_pkl_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y)
-        predict_y[:, 1] = predict_y[:, 1].astype(np.integer)  # 格式整理
+        origin_x = origin_data[-seq_length:]
+        predict_y = predict(model_pkl_path, origin_x, predict_seq_time, scaler_x, scaler_y)
+        predict_y[:, 2] = predict_y[:, 2].astype(np.integer)  # 格式整理
         predict_y[:, 0] = predict_y[:, 0] * timedelta(days=1) + datetime(1970, 1, 1)  # 时间戳反算
         predict_y = pd.DataFrame(predict_y, index=None)
         predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
