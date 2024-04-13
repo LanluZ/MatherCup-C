@@ -23,7 +23,7 @@ scaler_y = MinMaxScaler()
 
 
 def main():
-    input_size = 60  # 输入层维度
+    input_size = 59  # 输入层维度
     hidden_size = 512  # 隐藏层维度
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
@@ -34,11 +34,11 @@ def main():
     batch_size = 40  # 批次大小
     learn_rate = 0.001  # 学习率
 
-    create_model_mode = False  # 创建新模型
-    train_model_mode = False  # 训练模型
-    test_model_mode = False  # 测试模型
-    convert_model_mode = False  # 转换模型
-    predict_model_mode = True  # 预测模型
+    create_model_mode = True  # 创建新模型
+    train_model_mode = True  # 训练模型
+    test_model_mode = True  # 测试模型
+    convert_model_mode = True  # 转换模型
+    predict_model_mode = False  # 预测模型
 
     # 读取数据
     origin_data = pd.read_csv(os.path.join(data_path, '附件2.csv'), encoding='GBK')
@@ -47,24 +47,39 @@ def main():
     for row in origin_data.iterrows():
         # 日期格式线性化
         date_obj = datetime.strptime(row[1]['日期'], '%Y/%m/%d')
-        timestamp = (date_obj - datetime(1970, 1, 1)) // timedelta(days=1)  # 1970年经过天数
+        timestamp = (date_obj - datetime(1970, 1, 1)) // timedelta(hours=1)  # 1970年经过天数
         origin_data.iloc[row[0], 1] = timestamp
 
         # 补全个位数编号分拣中心
         origin_data.iloc[row[0], 0] = 'SC0' + row[1]['分拣中心'][-1] if len(row[1]['分拣中心']) == 3 else row[1][
             '分拣中心']
 
-    origin_data = origin_data.sort_values(by=['日期', '小时', '分拣中心'], ascending=True)  # 排序和子排序
+    origin_data = origin_data.sort_values(by=['分拣中心', '日期', '小时'], ascending=True)  # 排序和子排序
+
+    # 时间戳
+    for i in range(origin_data.shape[0]):
+        origin_data.iloc[i, 1] += origin_data.iloc[i, 2]
+
+    # 删除小时列
+    origin_data.drop('小时', axis=1, inplace=True)
+
+    # 记录分拣中心分界点
+    center_index = []
+    for i in range(origin_data.shape[0] - 1):
+        if origin_data.iloc[i, 0] != origin_data.iloc[i + 1, 0]:
+            center_index.append(i)  # 记录的是该分拣中心最后一小时索引位置
+
     origin_data = pd.get_dummies(origin_data, columns=['分拣中心'], prefix='Center')  # 编码哑变量
     origin_data = np.array(origin_data)  # 转化为numpy数组
 
     # 按时间序列升维
     data_x, data_y = [], []
     origin_data_x = scaler_x.fit_transform(origin_data[:, :])  # 归一化原始数据x
-    origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 2], axis=1))  # 归一化原始数据y
-    for i in range(origin_data.shape[0] - seq_length):
-        data_x.append(origin_data_x[i:i + seq_length])  # 现在
-        data_y.append(origin_data_y[i + 1:i + seq_length + 1])  # 未来
+    origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 1], axis=1))  # 归一化原始数据y
+    for i in range(origin_data.shape[0] - 1):
+        if i in center_index:
+            data_x.append(origin_data_x[i:i + seq_length])  # 现在
+            data_y.append(origin_data_y[i + 1:i + seq_length + 1])  # 未来
     data_x = np.array(data_x)  # 三维
     data_y = np.array(data_y)  # 三维
 
