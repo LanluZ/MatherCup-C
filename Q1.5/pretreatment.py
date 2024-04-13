@@ -1,10 +1,12 @@
+import os.path
+
 import pandas as pd
 import numpy as np
 
 from datetime import datetime, timedelta
 
 
-def pretreatment(origin_data):
+def pretreatment(origin_data, output_path):
     for row in origin_data.iterrows():
         # 日期格式线性化
         date_obj = datetime.strptime(row[1]['日期'], '%Y/%m/%d')
@@ -32,5 +34,12 @@ def pretreatment(origin_data):
 
     origin_data = pd.get_dummies(origin_data, columns=['分拣中心'], prefix='Center')  # 编码哑变量
     origin_data = np.array(origin_data)  # 转化为numpy数组
+
+    # 保存数据
+    origin_data = pd.DataFrame(origin_data, index=None)
+    center_index = pd.DataFrame(center_index, index=None)
+
+    origin_data.to_csv(os.path.join(output_path, 'origin_data.csv'), index=False, header=False)
+    center_index.to_csv(os.path.join(output_path, 'center_index.csv'), index=False, header=False)
 
     return origin_data, center_index
