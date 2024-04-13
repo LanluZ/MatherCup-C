@@ -41,13 +41,18 @@ def main():
     convert_model_mode = False  # 转换模型
     predict_model_mode = True  # 预测模型
 
-    # 读取数据
-    print("//开始数据加载//")
-
     # 数据预处理
     if pretreatment_data_mode:
         origin_data = pd.read_csv(os.path.join(data_path, '附件2.csv'), encoding='GBK')
-        origin_data, center_index = pretreatment(origin_data, output_path)
+        pretreatment(origin_data, output_path)
+
+    # 读取数据
+    origin_data = pd.read_csv(os.path.join(output_path, 'origin_data.csv'), header=None)
+    center_index = pd.read_csv(os.path.join(output_path, 'center_index.csv'), header=None)
+
+    # 格式转换
+    origin_data = np.array(origin_data)
+    center_index = np.array(center_index)
 
     # 按时间序列升维
     data_x, data_y = [], []
