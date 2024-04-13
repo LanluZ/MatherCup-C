@@ -27,8 +27,8 @@ def main():
     hidden_size = 512  # 隐藏层维度
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
-    seq_length = 51  # 序列大小
-    predict_seq_time = 51 * 24  # 预测长度
+    seq_length = 24  # 序列大小
+    predict_seq_time = 24 * 24  # 预测长度
 
     epochs = 20  # 训练轮次
     batch_size = 40  # 批次大小
@@ -41,6 +41,7 @@ def main():
     predict_model_mode = False  # 预测模型
 
     # 读取数据
+    print("//开始数据加载//")
     origin_data = pd.read_csv(os.path.join(data_path, '附件2.csv'), encoding='GBK')
 
     # 数据预处理
@@ -76,8 +77,8 @@ def main():
     data_x, data_y = [], []
     origin_data_x = scaler_x.fit_transform(origin_data[:, :])  # 归一化原始数据x
     origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 1], axis=1))  # 归一化原始数据y
-    for i in range(origin_data.shape[0] - 1):
-        if i in center_index:
+    for i in range(origin_data.shape[0] - seq_length - 1):
+        if i + seq_length not in center_index:
             data_x.append(origin_data_x[i:i + seq_length])  # 现在
             data_y.append(origin_data_y[i + 1:i + seq_length + 1])  # 未来
     data_x = np.array(data_x)  # 三维
@@ -86,6 +87,8 @@ def main():
     # 格式转换
     data_x = data_x.astype(np.float32)
     data_y = data_y.astype(np.float32)
+
+    print('//完成数据加载//')
 
     # 创建数据集
     train_data_x = data_x[int(data_x.shape[1] * 0.7):]  # 各种变量
