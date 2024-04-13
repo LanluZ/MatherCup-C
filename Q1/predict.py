@@ -5,11 +5,10 @@ import numpy as np
 import pandas as pd
 
 
-def predict(model_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y):
+def predict(model_path, origin_x, predict_seq_time, scaler_x, scaler_y):
     model = torch.load(model_path).cuda()
     model.eval()  # 测试模式
     # 循环预测
-    origin_x = origin_data[-seq_length:]
     predict_y = []
     for i in range(predict_seq_time):
         x = scaler_x.transform(origin_x)  # 归一化

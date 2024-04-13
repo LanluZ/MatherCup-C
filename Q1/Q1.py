@@ -110,7 +110,8 @@ def main():
 
     # 预测模型
     if predict_model_mode:
-        predict_y = predict(model_pkl_path, origin_data, seq_length, predict_seq_time, scaler_x, scaler_y)
+        origin_x = origin_data[-seq_length:]
+        predict_y = predict(model_pkl_path, origin_x, predict_seq_time, scaler_x, scaler_y)
         predict_y[:, 1] = predict_y[:, 1].astype(np.integer)  # 格式整理
         predict_y[:, 0] = predict_y[:, 0] * timedelta(days=1) + datetime(1970, 1, 1)  # 时间戳反算
         predict_y = pd.DataFrame(predict_y, index=None)
