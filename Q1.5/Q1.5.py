@@ -39,7 +39,7 @@ def main():
     train_model_mode = False  # 训练模型
     test_model_mode = False  # 测试模型
     convert_model_mode = False  # 转换模型
-    predict_model_mode = False  # 预测模型
+    predict_model_mode = True  # 预测模型
 
     # 数据预处理
     if pretreatment_data_mode:
@@ -68,8 +68,6 @@ def main():
     # 格式转换
     data_x = data_x.astype(np.float32)
     data_y = data_y.astype(np.float32)
-
-    print('//完成数据加载//')
 
     # 创建数据集
     train_data_x = data_x[int(data_x.shape[1] * 0.7):]  # 各种变量
@@ -109,12 +107,15 @@ def main():
 
     # 预测模型
     if predict_model_mode:
-        origin_x = origin_data[-seq_length:]
-        predict_y = predict(model_pkl_path, origin_x, predict_seq_time, scaler_x, scaler_y)
-        predict_y[:, 2] = predict_y[:, 2].astype(np.integer)  # 格式整理
-        predict_y[:, 0] = predict_y[:, 0] * timedelta(days=1) + datetime(1970, 1, 1)  # 时间戳反算
-        predict_y = pd.DataFrame(predict_y, index=None)
-        predict_y.to_csv(os.path.join(output_path, 'prediction.csv'), header=False, index=False)
+        for i, row in center_index_data.iterrows():
+            print('正在预测：{}'.format(row[1]))
+            origin_x = origin_data[row[0] + 1 - seq_length:row[0] + 1]
+            predict_y = predict(model_pkl_path, origin_x, predict_seq_time, scaler_x, scaler_y)
+            predict_y[:, 1] = predict_y[:, 1].astype(np.int_)  # 格式整理
+            predict_y[:, 0] = predict_y[:, 0] * timedelta(hours=1) + datetime(1970, 1, 1)  # 时间戳反算
+            predict_y = pd.DataFrame(predict_y, index=None)
+            predict_y.to_csv(os.path.join(output_path, 'predict', '{}_prediction.csv'.format(row[1])), header=False,
+                             index=False)
 
 
 class LSTMDataset(Dataset):

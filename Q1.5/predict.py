@@ -20,9 +20,8 @@ def predict(model_path, origin_x, predict_seq_time, scaler_x, scaler_y):
 
         # 新行准备
         new_line_x = copy.copy(origin_x[0])
-        new_line_x[0] += 1  # 日期更改
-        new_line_x[1] = new_line_x[1] + 1 if new_line_x[1] == 23 else 0  # 时间更改
-        new_line_x[2] = result[-1]  # 货值更改
+        new_line_x[0] += origin_x.shape[0]  # 日期更改
+        new_line_x[1] = result[-1]  # 货值更改
 
         # 旧行删除
         origin_x = np.delete(origin_x, 0, axis=0)
@@ -31,7 +30,7 @@ def predict(model_path, origin_x, predict_seq_time, scaler_x, scaler_y):
         origin_x = np.vstack((origin_x, new_line_x))
 
         # 结果记录
-        predict_y.append(new_line_x[0:3])
+        predict_y.append(new_line_x[0:2])
 
     # 结果保存
     predict_y = np.array(predict_y)
