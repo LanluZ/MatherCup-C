@@ -23,25 +23,25 @@ scaler_y = MinMaxScaler()
 
 
 def main():
-    input_size = 59  # 输入层维度
+    input_size = 60  # 输入层维度
     hidden_size = 512  # 隐藏层维度
     num_layers = 2  # 堆叠层数
     output_size = 1  # 输出层维度
-    seq_length = 57  # 序列大小
-    predict_seq_time = 57 * 30  # 预测长度
+    seq_length = 51  # 序列大小
+    predict_seq_time = 51 * 24  # 预测长度
 
     epochs = 20  # 训练轮次
     batch_size = 40  # 批次大小
     learn_rate = 0.001  # 学习率
 
-    create_model_mode = False  # 创建新模型
-    train_model_mode = False  # 训练模型
-    test_model_mode = False  # 测试模型
-    convert_model_mode = False  # 转换模型
-    predict_model_mode = True  # 预测模型
+    create_model_mode = True  # 创建新模型
+    train_model_mode = True  # 训练模型
+    test_model_mode = True  # 测试模型
+    convert_model_mode = True  # 转换模型
+    predict_model_mode = False  # 预测模型
 
     # 读取数据
-    origin_data = pd.read_csv(os.path.join(data_path, '附件1.csv'), encoding='GBK')
+    origin_data = pd.read_csv(os.path.join(data_path, '附件2.csv'), encoding='GBK')
 
     # 数据预处理
     for row in origin_data.iterrows():
@@ -54,14 +54,14 @@ def main():
         origin_data.iloc[row[0], 0] = 'SC0' + row[1]['分拣中心'][-1] if len(row[1]['分拣中心']) == 3 else row[1][
             '分拣中心']
 
-    origin_data = origin_data.sort_values(by=['日期', '分拣中心', '小时'], ascending=True)  # 排序和子排序
+    origin_data = origin_data.sort_values(by=['日期', '小时', '分拣中心'], ascending=True)  # 排序和子排序
     origin_data = pd.get_dummies(origin_data, columns=['分拣中心'], prefix='Center')  # 编码哑变量
     origin_data = np.array(origin_data)  # 转化为numpy数组
 
     # 按时间序列升维
     data_x, data_y = [], []
     origin_data_x = scaler_x.fit_transform(origin_data[:, :])  # 归一化原始数据x
-    origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 1], axis=1))  # 归一化原始数据y
+    origin_data_y = scaler_y.fit_transform(np.expand_dims(origin_data[:, 2], axis=1))  # 归一化原始数据y
     for i in range(origin_data.shape[0] - seq_length):
         data_x.append(origin_data_x[i:i + seq_length])  # 现在
         data_y.append(origin_data_y[i + 1:i + seq_length + 1])  # 未来
