@@ -34,7 +34,7 @@ def main():
     batch_size = 40  # 批次大小
     learn_rate = 0.001  # 学习率
 
-    pretreatment_data_mode = True  # 是否预处理原始数据
+    pretreatment_data_mode = False  # 是否预处理原始数据
     create_model_mode = False  # 创建新模型
     train_model_mode = False  # 训练模型
     test_model_mode = False  # 测试模型
@@ -48,11 +48,11 @@ def main():
 
     # 读取数据
     origin_data = pd.read_csv(os.path.join(output_path, 'origin_data.csv'), header=None)
-    center_index = pd.read_csv(os.path.join(output_path, 'center_index.csv'), header=None)
+    center_index_data = pd.read_csv(os.path.join(output_path, 'center_index.csv'), header=None)
 
     # 格式转换
     origin_data = np.array(origin_data)
-    center_index = np.array(center_index)
+    center_index = np.array(center_index_data.iloc[:, 1])
 
     # 按时间序列升维
     data_x, data_y = [], []

@@ -27,19 +27,20 @@ def pretreatment(origin_data, output_path):
     origin_data.drop('小时', axis=1, inplace=True)
 
     # 记录分拣中心分界点
-    center_index = []
+    center_index_data = []
     for i in range(origin_data.shape[0] - 1):
         if origin_data.iloc[i, 0] != origin_data.iloc[i + 1, 0]:
-            center_index.append(i)  # 记录的是该分拣中心最后一小时索引位置
+            center_index_data.append((i, origin_data.iloc[i, 0]))  # 记录的最后一小时索引位置与分拣中心名称
+    center_index_data.append((origin_data.shape[0] - 1, origin_data.iloc[origin_data.shape[0] - 1, 0]))  # 记录最后一个分拣中心
 
     origin_data = pd.get_dummies(origin_data, columns=['分拣中心'], prefix='Center')  # 编码哑变量
     origin_data = np.array(origin_data)  # 转化为numpy数组
 
     # 保存数据
     origin_data = pd.DataFrame(origin_data, index=None)
-    center_index = pd.DataFrame(center_index, index=None)
+    center_index_data = pd.DataFrame(center_index_data, index=None)
 
     origin_data.to_csv(os.path.join(output_path, 'origin_data.csv'), index=False, header=False)
-    center_index.to_csv(os.path.join(output_path, 'center_index.csv'), index=False, header=False)
+    center_index_data.to_csv(os.path.join(output_path, 'center_index.csv'), index=False, header=False)
 
-    return origin_data, center_index
+    return origin_data, center_index_data
