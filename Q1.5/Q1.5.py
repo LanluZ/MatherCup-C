@@ -118,6 +118,7 @@ def main():
             for j in range(predict_y.shape[0]):  # 时间列切割
                 predict_y[j, 0], predict_hours[j, 0] = predict_y[j][0].split(" ")
                 predict_y[j, 0]: np.str_ = predict_y[j, 0].replace('-', '/')
+                predict_hours[j, 0] = predict_hours[j, 0].split(":")[0]
             predict_y = np.hstack((predict_y, predict_hours))
             predict_y = pd.DataFrame(predict_y, index=None)
             predict_y.to_csv(os.path.join(output_path, 'predict', '{}_prediction.csv'.format(row[1])), header=False,
