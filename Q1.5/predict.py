@@ -19,8 +19,8 @@ def predict(model_path, origin_x, predict_seq_time, scaler_x, scaler_y):
         result = result.squeeze(1)  # 降维
 
         # 新行准备
-        new_line_x = copy.copy(origin_x[0])
-        new_line_x[0] += origin_x.shape[0]  # 日期更改
+        new_line_x = copy.copy(origin_x[-1])
+        new_line_x[0] += 1  # 日期更改
         new_line_x[1] = result[-1] if result[-1] > 0 else 0  # 货值更改
 
         # 旧行删除
