@@ -113,6 +113,11 @@ def main():
             predict_y = predict(model_pkl_path, origin_x, predict_seq_time, scaler_x, scaler_y)
             predict_y[:, 1] = predict_y[:, 1].astype(np.int_)  # 格式整理
             predict_y[:, 0] = predict_y[:, 0] * timedelta(hours=1) + datetime(1970, 1, 1)  # 时间戳反算
+            predict_y[:, 0] = predict_y[:, 0].astype(np.str_)  # 时间戳转换
+            predict_hours = np.zeros(predict_y.shape[0]).astype(np.str_)
+            for j in range(predict_y.shape[0]):
+                predict_y[j, 0], predict_hours[j] = predict_y[j][0].split(" ")
+                predict_hours[j] = predict_hours[j].split(":")[0]
             predict_y = pd.DataFrame(predict_y, index=None)
             predict_y.to_csv(os.path.join(output_path, 'predict', '{}_prediction.csv'.format(row[1])), header=False,
                              index=False)
